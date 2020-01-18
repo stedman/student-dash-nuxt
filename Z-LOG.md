@@ -73,4 +73,4 @@
           }
           ```
 
-3. Add [axios](https://github.com/axios/axios) and configure
+3. Add [axios](https://github.com/axios/axios): `npm i --save axios`

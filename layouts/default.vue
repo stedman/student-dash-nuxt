@@ -1,5 +1,6 @@
 <template>
   <div>
+    <div>Site Navigation</div>
     <nuxt />
   </div>
 </template>
