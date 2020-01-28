@@ -73,110 +73,83 @@
           }
           ```
 
-3. Add [axios](https://github.com/axios/axios): `npm i axios`
-4. Add [Vue Charts](https://www.yasminzy.com/nuxt/chart.html#steps)
+3. Activate [@nuxt/axios](https://axios.nuxtjs.org/) (also see: [axios](https://github.com/axios/axios)).
 
-    1. Install [Vue wrapper](https://github.com/hchstera/vue-charts) of [Charts.js](https://www.chartjs.org/): `npm i charts.js hchs-vue-charts`
-    2. Add plugin: `/plugins/chart.js`
+    Update `nuxt.config.js` to:
 
-        ```js
-        import Vue from 'vue';
+    ```json
+    modules: [ '@nuxtjs/axios' ],
+    ```
 
-        import 'chart.js';
-        import 'hchs-vue-charts';
+4. Add Vue version of Chart.js
 
-        Vue.use(window.VueCharts);
-        ```
+    > Note: [Charts.js](https://www.chartjs.org/) and [FusionCharts](https://fusioncharts.github.io/) look to be the main contenders for Vue-friendly chart libraries. Both have formidable features and good documentation (e.g., [Charts.js](https://www.chartjs.org/docs/latest/), [FusionCharts](https://fusioncharts.github.io/vue-fusioncharts/)). The choice to go with [<abbr title="Free Open Source">FOS</abbr>] Charts.js was easy after considering [FusionCharts pricing model](https://www.fusioncharts.com/buy).
 
-    3. Update Nuxt config: `/nuxt.config.js`
+    > Clues to the following config were hard to come by, but eventually uncovered deep in the [Nuxt commits](https://github.com/nuxt/nuxt.js/commit/d9ea41e97196b570cc9452c1e352e0613f5ed0c4#diff-21f3f273afa330b4793d01da4d0bd693). Yet another [attempt to integrate vue-chartjs into Nuxt](https://gist.github.com/rvanzon/096132b7b46be43659cf26360c664e9a) was found in a gist, but wasn't needed. Perhaps the component we created should be moved to plugins(?).
+
+    1. Add [Vue-Chartjs](https://vue-chartjs.org/): `npm i chart.js vue-chartjs`
+    2. Append vendor build info to Nuxt config: `/nuxt.config.js`
 
         ```json
-        plugins: [{ src: "@/plugins/chart", ssr: false }]
+        build: {
+          vendor: ["chart.js", "vue-chartjs"]
+        }
+        ```
+    3. Add JS component: `/components/vue-chart-bar.js`
+
+        ```js
+        import { Bar } from 'vue-chartjs';
+
+        export default {
+          extends: Bar,
+          props: ['data', 'options'],
+          mounted() {
+            this.renderChart(this.data, this.options);
+          }
+        };
         ```
 
-    4. Add component: `/components/chart-bar.vue`
-
-        > Note: [Charts.js](https://www.chartjs.org/) and [FusionCharts](https://fusioncharts.github.io/) look to be the main contenders for Vue-friendly chart libraries. Both have formidable features and good documentation (e.g., [Charts.js](https://www.chartjs.org/docs/latest/), [FusionCharts](https://fusioncharts.github.io/vue-fusioncharts/)). The choice to go with [<abbr title="Free Open Source">FOS</abbr>] Charts.js was easy after considering [FusionCharts pricing model](https://www.fusioncharts.com/buy).
+    4. Add page: `/pages/chart.vue`
 
         ```html
         <template>
-          <div class="card">
-            <div class="card-body">
-              <h2 class="card-title">Bar</h2>
-            </div>
-            <div class="card-img-bottom">
-              <canvas id="fooCanvas" count="2" />
-              <chartjs-bar
-                v-for="(item, index) in types"
-                :key="index"
-                :backgroundcolor="item.bgColor"
-                :beginzero="beginZero"
-                :bind="true"
-                :bordercolor="item.borderColor"
-                :data="item.data"
-                :datalabel="item.dataLabel"
-                :labels="labels"
-                target="fooCanvas"
-              />
-            </div>
+          <div class="bar-chart">
+            <BarChart :data="barChartData" :options="{ maintainAspectRatio: false }" />
           </div>
         </template>
 
         <script>
+        import BarChart from '~/components/vue-chart-bar';
+
         export default {
-          data() {
+          components: {
+            BarChart
+          },
+          asyncData() {
             return {
-              beginZero: true,
-              labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-              types: [
-                {
-                  bgColor: '#de98ab',
-                  borderColor: '0c0306',
-                  data: [1, 3, 5, 7, 2, 4, 6],
-                  dataLabel: 'Bar'
-                },
-                {
-                  bgColor: '#98ddde',
-                  borderColor: '030c0c',
-                  data: [1, 5, 2, 6, 3, 7, 4],
-                  dataLabel: 'Baz'
-                }
-              ]
+              barChartData: {
+                labels: [
+                  '7720 - 38',
+                  '0731 - 14',
+                  '0776 - 12',
+                  '8750 - 29',
+                  '7797 - 33',
+                  '7787 - 31',
+                  '0827 - 17'
+                ],
+                datasets: [
+                  {
+                    label: 'course',
+                    data: [92.96, 99.0, 90.13, 93.95, 88.85, 95.25, 96.28]
+                  }
+                ]
+              }
             };
           }
         };
         </script>
         ```
+    5. Connect chart to live grade data.
 
-    5. Add page: `/pages/chart.vue`
-
-        ```html
-        <template>
-          <no-ssr>
-            <div>
-              <h1>Chart Demo</h1>
-              <div class="grid">
-                <ChartBar />
-              </div>
-            </div>
-          </no-ssr>
-        </template>
-
-        <script>
-        import ChartBar from '@/components/chart-bar';
-
-        export default {
-          components: {
-            ChartBar
-          }
-        };
-        </script>
-
-        <style scoped>
-        .grid {
-          display: grid;
-          row-gap: 2rem;
-        }
-        </style>
-        ```
-
+        1. Add chart component
+        2. Connect component to parent

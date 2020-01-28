@@ -2,47 +2,57 @@
   <div class="container">
     <div>
       <h1 class="title">
-        grade-vue
+        Student Portal
       </h1>
       <h2 class="subtitle">
-        Zee Nuxt.js data view
+        A Nuxt.js data view
       </h2>
-      <div class="links">
-        <a href="https://nuxtjs.org/" target="_blank" class="button--green">
-          Documentation
-        </a>
-        <a
-          href="https://github.com/nuxt/nuxt.js"
-          target="_blank"
-          class="button--grey"
-        >
-          GitHub
-        </a>
-      </div>
       <div>
-        <p class="showtime">
-          And now it's time for a show!
-        </p>
-        <h3>
-          {{ studentName }}
-        </h3>
+        <h3>Recent Grades for {{ studentName }}</h3>
         <ul>
-          <li v-for="(grade, course) in snapshot">{{ course }}: {{ grade }}</li>
+          <li v-for="snap in snapshot">
+            <em>{{ snap.course }}:</em> {{ snap.average }}
+          </li>
         </ul>
+        <horiz-chart :data="chartData" />
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+import HorizChart from '~/components/vue-chart-horiz';
 
 export default {
-  async asyncData({ params }) {
-    const { data } = await axios.get(
-      'http://localhost:3001/api/v1/students/109683/grades/snapshot/3'
-    );
-    return { studentName: data.name, snapshot: data.course_grade_average };
+  components: { HorizChart },
+  async asyncData({ $axios }) {
+    try {
+      const data = await $axios.$get(
+        'http://localhost:3001/api/v1/students/109683/grades/snapshot/3'
+      );
+      const snapshot = data.course_grade_average.map((course) => {
+        return {
+          course: course.courseName,
+          average: course.average
+        };
+      });
+
+      const chartData = {
+        labels: data.course_grade_average.map((course) => course.courseName),
+        datasets: [
+          {
+            backgroundColor: 'hsla(200,10%,60%,0.6)',
+            borderColor: 'hsla(0,100%,100%,0.9)',
+            borderWidth: 1,
+            data: data.course_grade_average.map((course) => course.average)
+          }
+        ]
+      };
+
+      return { studentName: data.name, snapshot, chartData };
+    } catch (err) {
+      throw new Error(err.message);
+    }
   }
 };
 </script>

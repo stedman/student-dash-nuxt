@@ -1,6 +1,4 @@
-# grade-vue
-
-> My super-excellent Nuxt.js project
+# Student Dashboard
 
 ## Build Setup
 

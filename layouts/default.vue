@@ -1,6 +1,10 @@
 <template>
   <div>
-    <div>Site Navigation</div>
+    <div class="site-nav">
+      <a href="/">Home</a>
+      <a href="/chart">Chart</a>
+      <a href="/hchs-vue-charts">Chart (alt)</a>
+    </div>
     <nuxt />
   </div>
 </template>
@@ -52,5 +56,9 @@ html {
 .button--grey:hover {
   color: #fff;
   background-color: #35495e;
+}
+
+.site-nav {
+  text-align: center;
 }
 </style>

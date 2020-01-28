@@ -1,28 +1,16 @@
 <template>
-  <no-ssr>
-    <div>
-      <h1>Chart Demo</h1>
-
-      <div class="grid">
-        <ChartBar />
-      </div>
-    </div>
-  </no-ssr>
+  <div class="bar-chart">
+    <h2>Grades for Marking Period 3</h2>
+    <BarChart />
+  </div>
 </template>
 
 <script>
-import ChartBar from '@/components/chart-bar';
+import BarChart from '~/components/vue-chart-bar';
 
 export default {
   components: {
-    ChartBar
+    BarChart
   }
 };
 </script>
-
-<style scoped>
-.grid {
-  display: grid;
-  row-gap: 2rem;
-}
-</style>
