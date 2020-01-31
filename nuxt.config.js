@@ -4,6 +4,7 @@ module.exports = {
    ** Headers of the page
    */
   head: {
+    htmlAttrs: { lang: 'en-US' },
     title: process.env.npm_package_name || '',
     meta: [
       { charset: 'utf-8' },
@@ -22,7 +23,7 @@ module.exports = {
   /*
    ** Customize the progress-bar color
    */
-  loading: { color: '#fff' },
+  loading: { color: '#0f0' },
   /*
    ** Global CSS
    */
@@ -30,7 +31,10 @@ module.exports = {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [{ src: '@/plugins/hchs-vue-charts', ssr: false }],
+  plugins: [
+    { src: '@/plugins/hchs-vue-charts', ssr: false },
+    { src: '@/plugins/vue-skycons', ssr: false }
+  ],
   /*
    ** Nuxt.js dev-modules
    */

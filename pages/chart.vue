@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import BarChart from '~/components/vue-chart-bar';
+import BarChart from '~/components/vue-chart-horiz-2';
 
 export default {
   components: {

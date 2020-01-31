@@ -1,3 +1,4 @@
+<script>
 import { HorizontalBar } from 'vue-chartjs';
 
 export default {
@@ -10,14 +11,28 @@ export default {
   },
   mounted() {
     this.options = {
+      legend: {
+        display: false
+      },
       maintainAspectRatio: false,
       scales: {
         xAxes: [
           {
+            gridLines: {
+              color: '#333'
+            },
             ticks: {
+              fontColor: '#ccc',
               stepSize: 5,
-              suggestedMin: 75,
+              suggestedMin: 80,
               suggestedMax: 100
+            }
+          }
+        ],
+        yAxes: [
+          {
+            ticks: {
+              fontColor: '#999'
             }
           }
         ]
@@ -27,3 +42,4 @@ export default {
     this.renderChart(this.data, this.options);
   }
 };
+</script>

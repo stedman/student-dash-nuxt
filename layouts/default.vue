@@ -1,11 +1,24 @@
 <template>
   <div>
-    <div class="site-nav">
-      <a href="/">Home</a>
-      <a href="/chart">Chart</a>
-      <a href="/hchs-vue-charts">Chart (alt)</a>
-    </div>
-    <nuxt />
+    <header class="site-head">
+      <div class="site-brand">
+        <a href="/">Student Dashboard</a>
+      </div>
+
+      <nav class="site-nav">
+        <a href="/">Home</a>
+        • <a href="/chart">Chart</a>
+        <!-- • <a href="/hchs-vue-charts">Chart (alt)</a> -->
+      </nav>
+    </header>
+
+    <main class="site-main">
+      <nuxt />
+    </main>
+
+    <footer class="site-foot">
+      (footer)
+    </footer>
   </div>
 </template>
 
@@ -13,8 +26,7 @@
 html {
   font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 16px;
-  word-spacing: 1px;
+  font-size: 1rem;
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   -moz-osx-font-smoothing: grayscale;
@@ -29,36 +41,41 @@ html {
   margin: 0;
 }
 
-.button--green {
-  display: inline-block;
-  border-radius: 4px;
-  border: 1px solid #3b8070;
-  color: #3b8070;
+body {
+  background-color: hsl(220, 15%, 15%);
+  color: hsl(220, 15%, 75%);
+}
+
+a {
+  color: hsl(220, 15%, 95%);
   text-decoration: none;
-  padding: 10px 30px;
+}
+a:hover {
+  color: hsl(220, 15%, 100%);
+  text-decoration: underline;
 }
 
-.button--green:hover {
-  color: #fff;
-  background-color: #3b8070;
+.site-head,
+.site-main,
+.site-foot {
+  padding: 1em;
 }
 
-.button--grey {
+.site-head {
+  background-color: hsla(0, 0%, 0%, 0.4);
+}
+
+.site-brand,
+.site-nav {
   display: inline-block;
-  border-radius: 4px;
-  border: 1px solid #35495e;
-  color: #35495e;
-  text-decoration: none;
-  padding: 10px 30px;
-  margin-left: 15px;
-}
-
-.button--grey:hover {
-  color: #fff;
-  background-color: #35495e;
+  margin-right: 1em;
 }
 
 .site-nav {
   text-align: center;
+}
+
+.site-foot {
+  display: none;
 }
 </style>

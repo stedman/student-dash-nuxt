@@ -1,4 +1,9 @@
 import { HorizontalBar } from 'vue-chartjs';
+import secret from '~/.secret.json';
+
+// Get studentId from .secret.json
+// TODO: this is hard-coded now to grab 1st student
+const studentId = Object.keys(secret.student)[0];
 
 export default {
   extends: HorizontalBar,
@@ -13,7 +18,7 @@ export default {
     this.gradient.addColorStop(1, 'hsla(150,90%,70%,8)');
 
     const gradeData = await this.$axios.$get(
-      'http://localhost:3001/api/v1/students/109683/grades/snapshot/4'
+      `http://localhost:3001/api/v1/students/${studentId}/grades/snapshot/3`
     );
 
     this.data = {

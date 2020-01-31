@@ -149,7 +149,10 @@
         };
         </script>
         ```
+
     5. Connect chart to live grade data.
 
         1. Add chart component
         2. Connect component to parent
+
+    6. Add Weather and Lunch data
