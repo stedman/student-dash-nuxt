@@ -2,6 +2,8 @@
 
 > WIP: Work In Progress
 
+See https://github.com/stedman/student-data for more details.
+
 
 ## Build Setup
 
