@@ -156,3 +156,5 @@
         2. Connect component to parent
 
     6. Add Weather and Lunch data
+    7. Restyle CSS grid.
+    8. Add dotenv and move secrets there.

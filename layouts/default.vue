@@ -7,8 +7,7 @@
 
       <nav class="site-nav">
         <a href="/">Home</a>
-        • <a href="/chart">Chart</a>
-        <!-- • <a href="/hchs-vue-charts">Chart (alt)</a> -->
+        • <a href="/chart">Marking Periods</a>
       </nav>
     </header>
 
@@ -24,8 +23,8 @@
 
 <style>
 html {
-  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
   font-size: 1rem;
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
@@ -47,11 +46,11 @@ body {
 }
 
 a {
-  color: hsl(220, 15%, 95%);
+  color: hsl(150, 45%, 45%);
   text-decoration: none;
 }
 a:hover {
-  color: hsl(220, 15%, 100%);
+  color: hsl(150, 45%, 70%);
   text-decoration: underline;
 }
 

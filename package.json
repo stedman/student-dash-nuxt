@@ -18,12 +18,12 @@
     "chart.js": "^2.9.3",
     "cross-env": "^5.2.0",
     "express": "^4.16.4",
-    "hchs-vue-charts": "^1.2.8",
     "nuxt": "^2.0.0",
     "vue-chartjs": "^3.5.0",
     "vue-skycons": "^1.0.5"
   },
   "devDependencies": {
+    "@nuxtjs/dotenv": "^1.4.1",
     "@nuxtjs/eslint-config": "^1.0.1",
     "@nuxtjs/eslint-module": "^1.0.0",
     "@vue/test-utils": "^1.0.0-beta.27",

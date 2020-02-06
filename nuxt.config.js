@@ -31,14 +31,12 @@ module.exports = {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [
-    { src: '@/plugins/hchs-vue-charts', ssr: false },
-    { src: '@/plugins/vue-skycons', ssr: false }
-  ],
+  plugins: [{ src: '@/plugins/vue-skycons', ssr: false }],
   /*
    ** Nuxt.js dev-modules
    */
   buildModules: [
+    '@nuxtjs/dotenv',
     // Doc: https://github.com/nuxt-community/eslint-module
     '@nuxtjs/eslint-module'
   ],
@@ -46,6 +44,9 @@ module.exports = {
    ** Nuxt.js modules
    */
   modules: ['@nuxtjs/axios'],
+  /*
+   ** Module-specific
+   */
   axios: {
     proxy: true
   },
