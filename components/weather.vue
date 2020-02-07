@@ -94,9 +94,11 @@ export default {
   margin-left: 2em;
 }
 .weather-wind-dir {
-  border: 1px solid hsl(220, 25%, 30%);
+  background-color: hsl(220, 50%, 10%);
+  border: 1px solid transparent;
   border-radius: 1em;
   display: inline-block;
+  font-size: 1.2em;
   height: 1em;
   line-height: 0.9;
   margin-right: -0.2em;

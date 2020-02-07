@@ -6,8 +6,7 @@
       </div>
 
       <nav class="site-nav">
-        <a href="/">Home</a>
-        • <a href="/chart">Marking Periods</a>
+        CHARTS: <a href="/chart-mp">Course grades</a> • <a href="/chart-classwork">Classwork</a>
       </nav>
     </header>
 
