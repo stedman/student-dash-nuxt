@@ -154,3 +154,4 @@
     6. Add Weather and Lunch data
     7. Restyle CSS grid.
     8. Add dotenv and move secrets there.
+    9. [Configured VSCode to debug Nuxt on Firefox](https://medium.com/js-dojo/debugging-nuxt-js-with-vs-code-60a1a9e75cf6)
