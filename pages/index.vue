@@ -26,7 +26,7 @@
         </div>
       </div>
 
-      <div class="meals">
+      <div v-if="student.meals" class="meals">
         <h3>Lunch menu</h3>
         <ul class="meals-days no-bullets">
           <li v-for="menu in student.meals.menus" :key="menu.date" class="meals-day">
@@ -50,8 +50,33 @@
 import HorizChart from '~/components/vue-chart-horiz';
 import Weather from '~/components/weather';
 
-// MODIFY GRADE LOWER LIMIT TO TURN ON DASHBOARD ALERTS //
-const gradeLowerLimit = 70;
+const option = {
+  gradeLowerLimit: 70, // activates alerts on dashboard for grades that drop below
+  menuMeal: 'lunch' // choose 'lunch' or 'breakfast'
+};
+
+// Verify lower limit amount.
+const alertQuery =
+  option.gradeLowerLimit > 0 && option.gradeLowerLimit < 100
+    ? `?alertsScore=${option.gradeLowerLimit}`
+    : '';
+
+// If your school menu doesn't show up on the dashboard, check if school name at nutrislice
+// (https://roundrockisd.nutrislice.com/menu/) matches the one on Home Access.
+// If it doesn't, you can manually map the RRISD school name to the nutrislice slug in `slugMap`.
+const slugMap = {
+  'Patsy Sommer Elementary School': 'sommer-elementary-school'
+};
+
+const makeSchoolSlug = (schoolName) => {
+  if (slugMap[schoolName]) {
+    return slugMap[schoolName];
+  }
+  return schoolName
+    .toLowerCase()
+    .split(' ')
+    .join('-');
+};
 
 export default {
   components: {
@@ -59,14 +84,6 @@ export default {
     Weather
   },
   async asyncData({ $axios }) {
-    const schoolSlugs = {
-      'Cedar Valley Middle School': 'cedar-valley-middle-school',
-      'Patsy Sommer Elementary School': 'sommer-elementary-school'
-    };
-    // Verify lower limit amount.
-    const alertQuery =
-      gradeLowerLimit > 0 && gradeLowerLimit < 100 ? `?alertsScore=${gradeLowerLimit}` : '';
-
     try {
       // STUDENTS
       const students = await $axios.$get('http://localhost:3001/api/v1/students');
@@ -75,31 +92,35 @@ export default {
         const student = students[idx];
 
         // STUDENT GRADES
-        // Alert if grade is <70
-        const courseData = await $axios.$get(
-          `http://localhost:3001/api/v1/students/${student.id}/grades/average${alertQuery}`
-        );
+        try {
+          const courseData = await $axios.$get(
+            `http://localhost:3001/api/v1/students/${student.id}/grades/average${alertQuery}`
+          );
 
-        student.course = {};
-        student.course.alerts = courseData.alerts || [];
-        student.course.classwork = {
-          labels: courseData.grades.map((course) => course.courseName),
-          datasets: [
-            {
-              backgroundColor: 'hsla(200,10%,60%,0.6)',
-              borderColor: 'hsla(0,100%,100%,0.9)',
-              borderWidth: 1,
-              data: courseData.grades.map((course) => course.average)
-            }
-          ]
-        };
+          student.course = {};
+          student.course.alerts = courseData.alerts || [];
+          student.course.classwork = {
+            labels: courseData.grades.map((course) => course.courseName),
+            datasets: [
+              {
+                backgroundColor: 'hsla(200,10%,60%,0.6)',
+                borderColor: 'hsla(0,100%,100%,0.9)',
+                borderWidth: 1,
+                data: courseData.grades.map((course) => course.average)
+              }
+            ]
+          };
+        } catch (courseErr) {
+          // eslint-disable-next-line no-console
+          console.error(`Unable to load grades for "${student.name}" (${student.id}).`, courseErr);
+        }
 
         // SCHOOL MENU
         const baseUrl = 'https://roundrockisd.nutrislice.com/menu';
         const menuOption = {
           school: student.school,
-          schoolSlug: schoolSlugs[student.school],
-          meal: 'lunch' // alt: 'breakfast'
+          schoolSlug: makeSchoolSlug(student.school),
+          meal: option.menuMeal
         };
         const getCurrentDateString = () => {
           const now = new Date();
@@ -113,29 +134,35 @@ export default {
           `school/${menuOption.schoolSlug}/` +
           `menu-type/${menuOption.meal}/` +
           `date/${today}`;
-        const menuData = await $axios.$get(apiUrl);
 
-        student.meals = {
-          url: `${baseUrl}/${menuOption.schoolSlug}/${menuOption.meal}/${today}`,
-          menus: menuData.reduce((accumulator, menu) => {
-            if (
-              // Show 2 menus max
-              accumulator.length < 2 &&
-              // Show menus from today forward
-              new Date(menu.date.replace('-', '/')).getTime() >= todayMs
-            ) {
-              const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        try {
+          const menuData = await $axios.$get(apiUrl);
 
-              accumulator.push({
-                date: menu.date,
-                day: days[new Date(menu.date).getDay()],
-                menu_items: menu.menu_items
-              });
-            }
+          student.meals = {
+            url: `${baseUrl}/${menuOption.schoolSlug}/${menuOption.meal}/${today}`,
+            menus: menuData.reduce((accumulator, menu) => {
+              if (
+                // Show 2 menus max
+                accumulator.length < 2 &&
+                // Show menus from today forward
+                new Date(menu.date.replace('-', '/')).getTime() >= todayMs
+              ) {
+                const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-            return accumulator;
-          }, [])
-        };
+                accumulator.push({
+                  date: menu.date,
+                  day: days[new Date(menu.date).getDay()],
+                  menu_items: menu.menu_items
+                });
+              }
+
+              return accumulator;
+            }, [])
+          };
+        } catch (menuErr) {
+          // eslint-disable-next-line no-console
+          console.error(`Unable to load menu for "${student.school}".`, menuErr);
+        }
       }
 
       // WEATHER
@@ -147,21 +174,26 @@ export default {
       const darkskyKey = process.env.DARKSKY_KEY;
 
       if (darkskyKey) {
-        const weatherUrl = `https://api.darksky.net/forecast/${darkskyKey}/30.5047,-97.7521?exclude=minutely,flags`;
-        const weatherData = await $axios.$get(weatherUrl);
+        try {
+          const weatherUrl = `https://api.darksky.net/forecast/${darkskyKey}/30.5047,-97.7521?exclude=minutely,flags`;
+          const weatherData = await $axios.$get(weatherUrl);
 
-        weather.currently = weatherData.currently;
-        weather.currently.windBearingStyle = `transform:rotate(${weatherData.currently.windBearing}deg)`;
-        weather.forecast = {
-          today: {
-            summary: weatherData.hourly.summary,
-            data: weatherData.daily.data[0]
-          },
-          tomorrow: {
-            summary: weatherData.daily.data[1].summary,
-            data: weatherData.daily.data[1]
-          }
-        };
+          weather.currently = weatherData.currently;
+          weather.currently.windBearingStyle = `transform:rotate(${weatherData.currently.windBearing}deg)`;
+          weather.forecast = {
+            today: {
+              summary: weatherData.hourly.summary,
+              data: weatherData.daily.data[0]
+            },
+            tomorrow: {
+              summary: weatherData.daily.data[1].summary,
+              data: weatherData.daily.data[1]
+            }
+          };
+        } catch (weatherErr) {
+          // eslint-disable-next-line no-console
+          console.error('Unable to load weather.', weatherErr);
+        }
       }
 
       // SEND TO TEMPLATE
@@ -172,8 +204,6 @@ export default {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err);
-      // TODO: Add real error handling.
-      throw new Error(err);
     }
   }
 };
