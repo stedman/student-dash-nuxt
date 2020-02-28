@@ -5,14 +5,15 @@
     <div v-for="student in students" :key="student.id" class="students">
       <div class="classwork">
         <div>
-          <h3>{{ student.name.split(' ')[0] }}'s current grade average</h3>
+          <h3>{{ student.name.split(' ')[0] }}</h3>
+          <p>Current grading period</p>
           <horiz-chart :data="student.course.classwork" />
         </div>
 
-        <div v-if="student.course.comments[0]" class="comments">
-          <h4>Comments</h4>
+        <div v-if="student.course.alerts[0]" class="alerts">
+          <h4>Alerts</h4>
           <ul class="no-bullets">
-            <li v-for="comm in student.course.comments" :key="comm" class="comment-item">
+            <li v-for="comm in student.course.alerts" :key="comm" class="comment-item">
               <p>
                 <strong>{{ comm.date }}</strong> &rarr;
                 <strong>{{ comm.course }}</strong>
@@ -49,6 +50,9 @@
 import HorizChart from '~/components/vue-chart-horiz';
 import Weather from '~/components/weather';
 
+// MODIFY GRADE LOWER LIMIT TO TURN ON DASHBOARD ALERTS //
+const gradeLowerLimit = 70;
+
 export default {
   components: {
     HorizChart,
@@ -59,6 +63,9 @@ export default {
       'Cedar Valley Middle School': 'cedar-valley-middle-school',
       'Patsy Sommer Elementary School': 'sommer-elementary-school'
     };
+    // Verify lower limit amount.
+    const alertQuery =
+      gradeLowerLimit > 0 && gradeLowerLimit < 100 ? `?alertsScore=${gradeLowerLimit}` : '';
 
     try {
       // STUDENTS
@@ -68,21 +75,21 @@ export default {
         const student = students[idx];
 
         // STUDENT GRADES
+        // Alert if grade is <70
         const courseData = await $axios.$get(
-          // TODO: Fix endpoint
-          `http://localhost:3001/api/v1/students/${student.id}/grades/average`
+          `http://localhost:3001/api/v1/students/${student.id}/grades/average${alertQuery}`
         );
 
         student.course = {};
-        student.course.comments = courseData.comments;
+        student.course.alerts = courseData.alerts || [];
         student.course.classwork = {
-          labels: courseData.course_grade_average.map((course) => course.courseName),
+          labels: courseData.grades.map((course) => course.courseName),
           datasets: [
             {
               backgroundColor: 'hsla(200,10%,60%,0.6)',
               borderColor: 'hsla(0,100%,100%,0.9)',
               borderWidth: 1,
-              data: courseData.course_grade_average.map((course) => course.average)
+              data: courseData.grades.map((course) => course.average)
             }
           ]
         };
@@ -132,12 +139,20 @@ export default {
       }
 
       // WEATHER
+      const weather = {};
+
+      // Get Dark Sky API key at https://darksky.net/dev and
+      // then add to `.env` file on project root directory like so:
+      // DARKSKY_KEY=my_dark_sky_api_key
       const darkskyKey = process.env.DARKSKY_KEY;
-      const weatherUrl = `https://api.darksky.net/forecast/${darkskyKey}/30.5047,-97.7521?exclude=minutely,flags`;
-      const weatherData = await $axios.$get(weatherUrl);
-      const weather = {
-        currently: weatherData.currently,
-        forecast: {
+
+      if (darkskyKey) {
+        const weatherUrl = `https://api.darksky.net/forecast/${darkskyKey}/30.5047,-97.7521?exclude=minutely,flags`;
+        const weatherData = await $axios.$get(weatherUrl);
+
+        weather.currently = weatherData.currently;
+        weather.currently.windBearingStyle = `transform:rotate(${weatherData.currently.windBearing}deg)`;
+        weather.forecast = {
           today: {
             summary: weatherData.hourly.summary,
             data: weatherData.daily.data[0]
@@ -146,9 +161,8 @@ export default {
             summary: weatherData.daily.data[1].summary,
             data: weatherData.daily.data[1]
           }
-        }
-      };
-      weather.currently.windBearingStyle = `transform:rotate(${weatherData.currently.windBearing}deg)`;
+        };
+      }
 
       // SEND TO TEMPLATE
       return {
@@ -209,7 +223,7 @@ h4 {
   font-style: italic;
 }
 
-.comments,
+.alerts,
 .meals {
   margin-top: 2em;
 }

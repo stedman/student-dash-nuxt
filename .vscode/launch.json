@@ -10,7 +10,13 @@
       "reAttach": true,
       "name": "client: firefox",
       "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}"
+      "webRoot": "${workspaceFolder}",
+      "pathMappings": [
+        {
+          "url": "webpack-internal://",
+          "path": "${workspaceFolder}"
+        }
+      ]
     },
     {
       "type": "node",

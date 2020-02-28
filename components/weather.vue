@@ -1,5 +1,5 @@
 <template>
-  <div class="weather">
+  <div v-if="weather.currently" class="weather">
     <h3>Current Weather</h3>
     <div class="weather-temp-group">
       <span class="weather-icon"><skycon :condition="weather.icon" width="90" height="90"/></span>
