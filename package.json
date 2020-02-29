@@ -1,7 +1,7 @@
 {
-  "name": "grade-vue",
-  "version": "1.0.0",
-  "description": "My super-excellent Nuxt.js project",
+  "name": "student-dash-nuxt",
+  "version": "0.5.0",
+  "description": "Dashboard for student-data",
   "author": "Steve Stedman",
   "private": true,
   "scripts": {
