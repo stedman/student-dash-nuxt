@@ -30,7 +30,7 @@
         <h3>Lunch menu</h3>
         <ul class="meals-days no-bullets">
           <li v-for="menu in student.meals.menus" :key="menu.date" class="meals-day">
-            <h4>{{ menu.day }}</h4>
+            <h4>{{ menu.day }}, {{ menu.dateLabel }}</h4>
             <ul v-for="item in menu.menu_items" :key="item" class="meals-items no-bullets">
               <li class="meals-item">
                 {{ item }}
@@ -39,7 +39,8 @@
           </li>
         </ul>
         <p class="meals-digest-link">
-          More: <a :href="student.meals.url">{{ student.school }} weekly digest</a>
+          <span v-if="student.meals.menus.length">More: </span
+          ><a :href="student.meals.url" target="_blank">{{ student.school }} weekly digest</a>
         </p>
       </div>
     </div>
@@ -50,33 +51,56 @@
 import HorizChart from '~/components/vue-chart-horiz';
 import Weather from '~/components/weather';
 
+/* ------ BEGIN USER SETTINGS ------ */
 const option = {
   gradeLowerLimit: 70, // activates alerts on dashboard for grades that drop below
-  menuMeal: 'lunch' // choose 'lunch' or 'breakfast'
+  menuDaysMax: 2, // shows max number of daily menus from today; use '0' to hide menus
+  menuMeal: 'lunch', // choose 'lunch' or 'breakfast'
+  chartBarColor: 'hsla(200,10%,60%,0.6)',
+  chartBarBorderColor: 'hsla(0,100%,100%,0.9)',
+  chartBarBorderWidth: 1
 };
 
-// Verify lower limit amount.
+// If your school menu doesn't show up on the dashboard, check if school name at nutrislice
+// (https://roundrockisd.nutrislice.com/menu/) matches the one on Home Access.
+// If it doesn't, you can manually map the RRISD school name to the nutrislice slug in `slugMap`.
+const menuSlugMap = {
+  'Patsy Sommer Elementary School': 'sommer-elementary-school'
+};
+/* ------ END USER SETTINGS ------ */
+
+// Get Dark Sky API key at https://darksky.net/dev and
+// then add to `.env` file on project root directory, like so:
+// DARKSKY_KEY=my_dark_sky_api_key
+const darkskyKey = process.env.DARKSKY_KEY;
+
+// Modifiy the following as `student-data` app hostname or port changes.
+const studentApiUrl = 'http://localhost:3001/api/v1/students';
+
+// Verify lower limit amount for student grade request query.
 const alertQuery =
   option.gradeLowerLimit > 0 && option.gradeLowerLimit < 100
     ? `?alertsScore=${option.gradeLowerLimit}`
     : '';
 
-// If your school menu doesn't show up on the dashboard, check if school name at nutrislice
-// (https://roundrockisd.nutrislice.com/menu/) matches the one on Home Access.
-// If it doesn't, you can manually map the RRISD school name to the nutrislice slug in `slugMap`.
-const slugMap = {
-  'Patsy Sommer Elementary School': 'sommer-elementary-school'
-};
-
-const makeSchoolSlug = (schoolName) => {
-  if (slugMap[schoolName]) {
-    return slugMap[schoolName];
+// Build school slug for menu request.
+const getSchoolSlug = (schoolName) => {
+  // Use override if available.
+  if (menuSlugMap[schoolName]) {
+    return menuSlugMap[schoolName];
   }
+  // Turn title-case school name into kebab slug.
   return schoolName
     .toLowerCase()
     .split(' ')
     .join('-');
 };
+
+// Menu date stuff.
+const dateNow = new Date();
+const dateNowMs = dateNow.getTime();
+const dateNowString = `${dateNow.getFullYear()}-${dateNow.getMonth() + 1}-${dateNow.getDate()}`;
+const changeDashToSlash = (str) => str.replace(/-/g, '/');
 
 export default {
   components: {
@@ -85,28 +109,29 @@ export default {
   },
   async asyncData({ $axios }) {
     try {
-      // STUDENTS
-      const students = await $axios.$get('http://localhost:3001/api/v1/students');
+      // REQUEST ALL STUDENTS
+      const students = await $axios.$get(studentApiUrl);
 
       for (let idx = 0; idx < students.length; idx += 1) {
         const student = students[idx];
 
-        // STUDENT GRADES
+        // REQUEST STUDENT GRADES
         try {
-          const courseData = await $axios.$get(
-            `http://localhost:3001/api/v1/students/${student.id}/grades/average${alertQuery}`
+          const gradesData = await $axios.$get(
+            `${studentApiUrl}/${student.id}/grades/average${alertQuery}`
           );
 
-          student.course = {};
-          student.course.alerts = courseData.alerts || [];
+          student.course = {
+            alerts: gradesData.alerts || []
+          };
           student.course.classwork = {
-            labels: courseData.grades.map((course) => course.courseName),
+            labels: gradesData.grades.map((course) => course.courseName),
             datasets: [
               {
-                backgroundColor: 'hsla(200,10%,60%,0.6)',
-                borderColor: 'hsla(0,100%,100%,0.9)',
-                borderWidth: 1,
-                data: courseData.grades.map((course) => course.average)
+                backgroundColor: option.chartBarColor,
+                borderColor: option.chartBarBorderColor,
+                borderWidth: option.chartBarBorderWidth,
+                data: gradesData.grades.map((course) => course.average)
               }
             ]
           };
@@ -115,63 +140,58 @@ export default {
           console.error(`Unable to load grades for "${student.name}" (${student.id}).`, courseErr);
         }
 
-        // SCHOOL MENU
-        const baseUrl = 'https://roundrockisd.nutrislice.com/menu';
-        const menuOption = {
-          school: student.school,
-          schoolSlug: makeSchoolSlug(student.school),
-          meal: option.menuMeal
-        };
-        const getCurrentDateString = () => {
-          const now = new Date();
-
-          return `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
-        };
-        const today = getCurrentDateString();
-        const todayMs = new Date(today).getTime();
-        const apiUrl =
-          `${baseUrl}/api/weeks/digest/` +
-          `school/${menuOption.schoolSlug}/` +
-          `menu-type/${menuOption.meal}/` +
-          `date/${today}`;
-
-        try {
-          const menuData = await $axios.$get(apiUrl);
-
-          student.meals = {
-            url: `${baseUrl}/${menuOption.schoolSlug}/${menuOption.meal}/${today}`,
-            menus: menuData.reduce((accumulator, menu) => {
-              if (
-                // Show 2 menus max
-                accumulator.length < 2 &&
-                // Show menus from today forward
-                new Date(menu.date.replace('-', '/')).getTime() >= todayMs
-              ) {
-                const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-
-                accumulator.push({
-                  date: menu.date,
-                  day: days[new Date(menu.date).getDay()],
-                  menu_items: menu.menu_items
-                });
-              }
-
-              return accumulator;
-            }, [])
+        // REQUEST SCHOOL MENU
+        if (option.menuDaysMax > 0) {
+          const menuBaseUrl = 'https://roundrockisd.nutrislice.com/menu';
+          const menuOption = {
+            school: student.school,
+            schoolSlug: getSchoolSlug(student.school),
+            meal: option.menuMeal
           };
-        } catch (menuErr) {
-          // eslint-disable-next-line no-console
-          console.error(`Unable to load menu for "${student.school}".`, menuErr);
+          const apiUrl =
+            `${menuBaseUrl}/api/weeks/digest/` +
+            `school/${menuOption.schoolSlug}/` +
+            `menu-type/${menuOption.meal}/` +
+            `date/${changeDashToSlash(dateNowString)}`;
+          const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+          try {
+            const menuData = await $axios.$get(apiUrl);
+
+            student.meals = {
+              url: `${menuBaseUrl}/${menuOption.schoolSlug}/${menuOption.meal}/${dateNowString}`,
+              menus: menuData.reduce((accumulator, menu) => {
+                // Replace menu date dashes with slashes to generate correct date.
+                const menuDate = new Date(changeDashToSlash(menu.date));
+                if (
+                  // Show a max number of daily menus.
+                  accumulator.length < option.menuDaysMax &&
+                  // Show menus from today forward.
+                  menuDate.getTime() >= dateNowMs
+                ) {
+                  accumulator.push({
+                    date: menu.date,
+                    dateLabel: menuDate
+                      .toString()
+                      .substring(4, 10)
+                      .trim(),
+                    day: days[menuDate.getDay() - 1],
+                    menu_items: menu.menu_items
+                  });
+                }
+
+                return accumulator;
+              }, [])
+            };
+          } catch (menuErr) {
+            // eslint-disable-next-line no-console
+            console.error(`Unable to load menu for "${student.school}".`, menuErr);
+          }
         }
       }
 
-      // WEATHER
+      // REQUEST WEATHER
       const weather = {};
-
-      // Get Dark Sky API key at https://darksky.net/dev and
-      // then add to `.env` file on project root directory like so:
-      // DARKSKY_KEY=my_dark_sky_api_key
-      const darkskyKey = process.env.DARKSKY_KEY;
 
       if (darkskyKey) {
         try {

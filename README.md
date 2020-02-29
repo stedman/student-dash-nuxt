@@ -26,7 +26,29 @@ Serve with hot reload at [localhost:3000](http://localhost:3000).
 npm run dev
 ```
 
-### Additional
+Configurable options for the [Dashboard](http://localhost:3000) can be found in the `./pages/index.vue` file. Look for the following section.
+
+```js
+/* ------ BEGIN USER SETTINGS ------ */
+const option = {
+  gradeLowerLimit: 70, // activates alerts on dashboard for grades that drop below
+  menuDaysMax: 2, // shows max number of daily menus from today; use '0' to hide menus
+  menuMeal: 'lunch', // choose 'lunch' or 'breakfast'
+  chartBarColor: 'hsla(200,10%,60%,0.6)',
+  chartBarBorderColor: 'hsla(0,100%,100%,0.9)',
+  chartBarBorderWidth: 1
+};
+
+// If your school menu doesn't show up on the dashboard, check if school name at nutrislice
+// (https://roundrockisd.nutrislice.com/menu/) matches the one on Home Access.
+// If it doesn't, you can manually map the RRISD school name to the nutrislice slug in `slugMap`.
+const menuSlugMap = {
+  'Patsy Sommer Elementary School': 'sommer-elementary-school'
+};
+/* ------ END USER SETTINGS ------ */
+```
+
+### Advanced Nuxt
 
 ```sh
 # build for production and launch server
